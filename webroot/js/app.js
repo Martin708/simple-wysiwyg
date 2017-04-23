@@ -7,8 +7,7 @@ var wysiwygEditor;
 var $editor = document.getElementById('wysiwygEditor')
 wysiwygEditor = $editor.contentWindow.document;
 
-var addButton = document.querySelector('.wysiwyg-add-button')
-var toolbarButton = document.querySelectorAll('.wysiwyg-toolbar-button')
+var addButton = document.querySelector('.sw-add-button')
 
 function iFrameOn()
 {
@@ -24,7 +23,6 @@ wysiwygEditor.onkeydown = function(e) {
 	var selection = getSelectionStart()
 	var nodeName = selection.nodeName
 	var text = selection.innerText
-	console.log(text.length + ',', 'node: ' + nodeName)
 
 	if (e.keyCode === 13 && nodeName != 'LI' && nodeName != 'OL') {
 		wysiwygEditor.execCommand('formatBlock', false, '<P>')
@@ -38,48 +36,6 @@ wysiwygEditor.onkeydown = function(e) {
 		}
 	}
 }
-
-window.addEventListener('click', (e) => {
-	if (e.target && e.target.classList.contains('wysiwyg-button')) {
-		var target = e.target
-
-		if (target.dataset.function) {
-			var func = target.dataset.function
-			var args = target.dataset.arguments
-
-			window[func](args)
-		}
-	}
-})
-
-/*for(var i=0; i < toolbarButton.length; i++) {
-	var button = toolbarButton[i]
-	button.addEventListener('click', (e) => {
-		var func = e.target.dataset.function
-		var args = e.target.dataset.arguments
-		console.log(e.target.dataset)
-		window[func](args)
-	})
-}
-
-addButton.addEventListener('click', (e) => {
-	e.preventDefault()
-	var func
-	var input = e.target.dataset.id
-
-	switch (input)
-	{
-		case 'wysiwyg_link':
-			func = 'iLink'
-			break
-
-		default:
-			alert('Error')
-			break
-	}
-
-	window[func](e)
-})*/
 
 wysiwygEditor.addEventListener('paste', (e) => {
 	e.preventDefault()
@@ -135,7 +91,8 @@ function iList(type)
 
 function iMedia(href)
 {
-	$('.wysiwyg-popup').load(href, function(responseTxt, statusTxt, xhr){
+	console.log(href)
+	$('.sw-popup').load(href, function(responseTxt, statusTxt, xhr){
 		if(statusTxt == "error")
 			console.log("Error: " + xhr.status + ": " + xhr.statusText);
 	})
@@ -237,17 +194,57 @@ function isURL(str) {
 	return (a.host && a.host != window.location.host);
 }
 
-$(function() {
-	$('body').on('click', '.drop-menu-button', function() {
+function toggleDropMenu(event, closeAll = false)
+{
+	var target = event //event.target
+	var classList = target.classList
+	var obj = $(target)
+
+	if (target && closeAll === false && (classList.contains('sw-drop-menu-button') || classList.contains('sw-toggle-popup'))) {
+		if (classList.contains('sw-toggle-popup')) {
+			document.querySelector('.sw-popup-wrap').classList.toggle('sw-is-hidden')
+		}
 		var selection = getSelectionText()
 
-		var $dropMenuContent = $(this).next('.drop-menu-content')
-		var $dropMenuContentLabel = $dropMenuContent.children('.wysiwyg-selected-label')
+		var $dropMenuContent = obj.parents('.sw-dropdown-wrap').children('.sw-drop-menu-content')
+		var $dropMenuContentLabel = $dropMenuContent.children('.sw-selected-label')
 
-		$('.drop-menu-content').not($dropMenuContent).addClass('is-hidden')
+		$('.sw-drop-menu-content').not($dropMenuContent).addClass('sw-is-hidden')
 
-		$dropMenuContent.toggleClass('is-hidden')
+		$dropMenuContent.toggleClass('sw-is-hidden')
+		$dropMenuContent.css('top', target.clientHeight)
+		$dropMenuContent.css('left', target.offsetLeft)
+
 		$dropMenuContentLabel.focus()
 		$dropMenuContentLabel.val(selection)
+	} else {
+		$('.sw-drop-menu-content').addClass('sw-is-hidden')
+		$('.sw-popup-wrap').addClass('sw-is-hidden')
+	}
+}
+
+function toggleFunction(element)
+{
+	var el = element
+
+	if (el.hasClass('sw-button')) {
+		if (el.data('function')) {
+			var func = el.data('function')
+			var args = el.data('arguments')
+
+			window[func](args)
+		}
+	}
+}
+
+$(function() {
+	$(document).on('click', '.sw-toggle-popup, .sw-drop-menu-button, .sw-button', function(e) {
+		e.preventDefault()
+		e.stopPropagation()
+
+		if ($(this).hasClass('sw-button'))
+			toggleFunction($(this))
+
+		toggleDropMenu(this)
 	})
 })

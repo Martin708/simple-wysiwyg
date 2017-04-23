@@ -18,7 +18,7 @@ class WysiwygHelper extends Helper
      */
     protected $_defaultConfig = [
 		'iframe' => [
-			'class' => 'wysiwyg-editor'
+			'class' => 'sw-editor'
 		],
 		'toolbar' => [
 			'buttons' => [
@@ -31,7 +31,7 @@ class WysiwygHelper extends Helper
 				'media',
 				'underline'
 			],
-			'class' => 'wysiwyg-toolbar'
+			'class' => 'sw-toolbar'
 		],
 		'config' => [
 			'media_url'
@@ -44,7 +44,7 @@ class WysiwygHelper extends Helper
 		$editor_class = $config['iframe']['class'];
 		$buttons = $config['toolbar']['buttons'];
 		$toolbar_class = $config['toolbar']['class'];
-		$ret = "";
+		$ret = '<div class="sw-wrap">';
 
 		if (isset($editorConfig['toolbar']['buttons']))
 			$buttons = $editorConfig['toolbar']['buttons'];
@@ -61,14 +61,15 @@ class WysiwygHelper extends Helper
 		$ret .= '</div>';
         $ret .= <<<EOT
 <iframe name="wysiwygEditor" id="wysiwygEditor" class="$editor_class"></iframe>
-<div class="wysiwyg-popup"></div>
+</div>
+<div class="sw-popup-wrap sw-is-hidden"><div class="sw-popup"></div></div>
 EOT;
 		return $ret;
     }
 
 	public function sendToEditor()
 	{
-		return '<input type="button" value="' . __('Add') . '" id="wysiwyg_popup_add" class="wysiwyg-button wysiwyg-toolbar-button" data-function="addToEditor">';
+		return '<input type="button" value="' . __('Add') . '" id="wysiwyg_popup_add" class="sw-button sw-toolbar-button" data-function="addToEditor">';
 	}
 
 	private function _getButton($button, $config)
@@ -76,64 +77,67 @@ EOT;
 		switch ($button) {
 			case $button == 'italic':
 				$function = 'iItalic';
-				$label = 'I';
+				$label = '<span class="icon-italic" data-function="' . $function . '"></span>';
 				break;
 			case $button == 'bold':
 				$function = 'iBold';
-				$label = 'B';
+				$label = '<span class="icon-bold" data-function="' . $function . '"></span>';
 				break;
 			case $button == 'underline':
 				$function = 'iUnderline';
-				$label = 'U';
+				$label = '<span class="icon-underline" data-function="' . $function . '"></span>';
 				break;
 			case $button == 'code':
 				$function = 'iCode';
-				$label = '<>';
+				$label = '<span class="icon-embed" data-function="' . $function . '"></span>';
 				break;
 			case $button == 'media':
 				$function = 'iMedia';
-				$label = 'Media';
 				$href = $config['media_url'];
-				$return = '<input type="button" value="' . $label . '" class="wysiwyg-button wysiwyg-toolbar-button" data-function="' . $function . '" data-arguments="' . $href . '">';
+				$label = '<span class="icon-image"></span>';
+				$return = '<button class="sw-button sw-toolbar-button sw-toggle-popup" data-function="' . $function . '" data-arguments="' . $href . '">' . $label . '</button>';
 				break;
 			case $button == 'link':
+				$label ='<span class="icon-link"></span>';
 				$value = __('Add');
 				$return = <<<EOT
-<input type="button" value="Link" class="drop-menu-button">
-<div class="drop-menu-content is-hidden">
-	<input type="text" name="wysiwyg_link_label" id="wysiwyg_link_label" class="wysiwyg-selected-label">
+<div class="sw-dropdown-wrap"><button class="sw-drop-menu-button sw-toolbar-button">$label</button>
+<div class="sw-drop-menu-content sw-is-hidden">
+	<input type="text" name="wysiwyg_link_label" id="wysiwyg_link_label" class="sw-selected-label">
 	<input type="url" name="wysiwyg_link" id="wysiwyg_link">
-	<input type="button" value="$value" class="wysiwyg-button wysiwyg-toolbar-button" data-function="iLink">
-</div>
+	<input type="button" value="$value" class="sw-button" data-function="iLink">
+</div></div>
 EOT;
 				break;
 			case $button == 'list':
 				$return = <<<EOT
-<input type="button" value="List" class="drop-menu-button">
-<div class="drop-menu-content is-hidden">
-	<input type="button" value="Ordered" class="wysiwyg-button wysiwyg-toolbar-button" data-function="iList" data-arguments="insertOrderedList">
-	<input type="button" value="Unordered" class="wysiwyg-button wysiwyg-toolbar-button" data-function="iList" data-arguments="insertUnorderedList">
-</div>
+<div class="sw-dropdown-wrap"><input type="button" value="List" class="sw-drop-menu-button sw-toolbar-button">
+<div class="sw-drop-menu-content sw-is-hidden">
+	<input type="button" value="Ordered" class="sw-button" data-function="iList" data-arguments="insertOrderedList">
+	<input type="button" value="Unordered" class="sw-button" data-function="iList" data-arguments="insertUnorderedList">
+</div></div>
 EOT;
 				break;
 			case $button == 'header':
 				$return = <<<EOT
-<input type="button" value="H" class="drop-menu-button">
-<div class="drop-menu-content is-hidden">
-	<input type="button" value="H1" class="wysiwyg-button wysiwyg-toolbar-button" data-function="iHeader" data-arguments="h1">
-	<input type="button" value="H2" class="wysiwyg-button wysiwyg-toolbar-button" data-function="iHeader" data-arguments="h2">
-	<input type="button" value="H3" class="wysiwyg-button wysiwyg-toolbar-button" data-function="iHeader" data-arguments="h3">
-	<input type="button" value="H4" class="wysiwyg-button wysiwyg-toolbar-button" data-function="iHeader" data-arguments="h4">
-	<input type="button" value="H5" class="wysiwyg-button wysiwyg-toolbar-button" data-function="iHeader" data-arguments="h5">
-	<input type="button" value="H6" class="wysiwyg-button wysiwyg-toolbar-button" data-function="iHeader" data-arguments="h6">
-</div>
+<div class="sw-dropdown-wrap"><input type="button" value="H" class="sw-drop-menu-button sw-toolbar-button">
+<div class="sw-drop-menu-content sw-is-hidden">
+	<ul class="sw-ul">
+		<li class="sw-col"><input type="button" value="H1" class="sw-button" data-function="iHeader" data-arguments="h1"></li>
+		<li class="sw-col"><input type="button" value="H2" class="sw-button" data-function="iHeader" data-arguments="h2"></li>
+		<li class="sw-col"><input type="button" value="H3" class="sw-button" data-function="iHeader" data-arguments="h3"></li>
+		<li class="sw-col"><input type="button" value="H4" class="sw-button" data-function="iHeader" data-arguments="h4"></li>
+		<li class="sw-col"><input type="button" value="H5" class="sw-button" data-function="iHeader" data-arguments="h5"></li>
+		<li class="sw-col"><input type="button" value="H6" class="sw-button" data-function="iHeader" data-arguments="h6"></li>
+	</ul>
+</div></div>
 EOT;
 				break;
 		}
 
 		if (!isset($return)) {
 			if (isset($function) && isset($label)) {
-				$return = '<input type="button" value="' . $label . '" class="wysiwyg-button wysiwyg-toolbar-button" data-function="' . $function . '">';
+				$return = '<button class="sw-button sw-toolbar-button" data-function="' . $function . '">' . $label . '</button>';
 			} else {
 				return false;
 			}
